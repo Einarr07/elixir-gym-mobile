@@ -1,3 +1,4 @@
 class Routes {
-  static const String usuario = '/usuario';
+  static const String clienteHome = '/cliente/homme';
+  static const String clienteProfile = '/cliente/perfil';
 }
