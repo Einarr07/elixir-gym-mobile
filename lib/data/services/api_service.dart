@@ -9,11 +9,8 @@ class ApiService {
 
   Future<Usuario> fetchUsuario(int id) async {
     final url = Uri.parse('$baseUrl/usuario/$id');
-    print("Llamando a la API: $url");
 
     final response = await http.get(url);
-    print("Código de respuesta: ${response.statusCode}");
-    print("Cuerpo: ${response.body}");
 
     if (response.statusCode == 200) {
       return Usuario.fromJson(jsonDecode(response.body));
@@ -21,5 +18,4 @@ class ApiService {
       throw Exception('Error al cargar usuario: ${response.statusCode}');
     }
   }
-
 }

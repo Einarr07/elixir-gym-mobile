@@ -1,7 +1,7 @@
+import 'package:elixir_gym/presentation/screens/profile_screen.dart';
+import 'package:elixir_gym/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:elixir_gym/presentation/screens/usuario_screen.dart';
-import 'package:elixir_gym/routes/routes.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,9 +21,7 @@ class MyApp extends StatelessWidget {
       title: 'ElixirGym',
       theme: ThemeData(primarySwatch: Colors.orange),
       initialRoute: Routes.usuario,
-      routes: {
-        Routes.usuario: (context) => UsuarioScreen(usuarioId: 2),
-      },
+      routes: {Routes.usuario: (context) => ProfileScreen(usuarioId: 6)},
     );
   }
 }
