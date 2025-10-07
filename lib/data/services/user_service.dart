@@ -4,8 +4,8 @@ import 'package:elixir_gym/data/models/user_model.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
-class ApiService {
-  final String baseUrl = dotenv.env['API_BASE_URL'] ?? "http://localhost:8080";
+class UserService {
+  final String baseUrl = dotenv.env['API_BASE_URL'] ?? "";
 
   Future<Usuario> fetchUsuario(int id) async {
     final url = Uri.parse('$baseUrl/usuario/$id');
