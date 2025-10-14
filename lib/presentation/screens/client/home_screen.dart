@@ -1,5 +1,6 @@
 import 'package:elixir_gym/core/theme/app_colors.dart';
 import 'package:elixir_gym/presentation/screens/client/profile_screen.dart';
+import 'package:elixir_gym/presentation/screens/client/reservation_screen.dart';
 import 'package:elixir_gym/presentation/screens/client/schedules_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -16,7 +17,8 @@ class _HomeScreenState extends State<HomeScreen> {
   // List of screens
   final List<Widget> _screens = const [
     SchedulesScreen(),
-    ProfileScreen(usuarioId: 3),
+    ReservasScreen(),
+    ProfileScreen(usuarioId: 4),
   ];
 
   void _onItemTapped(int index) {
@@ -40,6 +42,10 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_month_rounded),
             label: 'Horarios',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite_outline_rounded),
+            label: 'Reservas',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
         ],

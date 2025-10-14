@@ -8,7 +8,10 @@ class HorariosProvider extends ChangeNotifier {
 
   bool isLoading = false;
   List<Horario> horarios = [];
+  Horario? _horarioSeleccionado;
   String? errorMessage;
+
+  Horario? get horarioSeleccionado => _horarioSeleccionado;
 
   Future<void> fetchHorarios() async {
     isLoading = true;
@@ -16,12 +19,17 @@ class HorariosProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      horarios = await _service.fetchHorario();
+      horarios = await _service.fetchHorarios();
     } catch (e) {
       errorMessage = 'Error al cargar horarios: $e';
     }
 
     isLoading = false;
+    notifyListeners();
+  }
+
+  void seleccionarHorario(Horario horario) {
+    _horarioSeleccionado = horario;
     notifyListeners();
   }
 }
