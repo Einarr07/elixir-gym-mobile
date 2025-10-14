@@ -1,6 +1,9 @@
 import 'package:elixir_gym/core/theme/app_colors.dart';
 import 'package:elixir_gym/data/services/user_service.dart';
+import 'package:elixir_gym/presentation/providers/auth/auth_provider.dart';
 import 'package:elixir_gym/presentation/providers/client/user_provider.dart';
+import 'package:elixir_gym/presentation/screens/auth/login_screen.dart';
+import 'package:elixir_gym/presentation/screens/client/edit_profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -44,7 +47,57 @@ class _UsuarioScreenState extends State<ProfileScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit, color: AppColors.textPrimary),
-            onPressed: () {},
+            onPressed: () async {
+              final userProv = context.read<UserProvider>();
+              final current = userProv.usuario;
+              if (current == null) return;
+              final updated = await Navigator.push<Usuario?>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditProfileScreen(usuario: current),
+                ),
+              );
+
+              if (updated != null && context.mounted) {
+                userProv.setUsuario(updated);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Perfil actualizado')),
+                );
+              }
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: AppColors.primary),
+            tooltip: 'Cerrar sesión',
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: const Text('Cerrar sesión'),
+                  content: const Text('¿Seguro que deseas salir?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancelar'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Salir'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                await context.read<AuthProvider>().logout();
+                context.read<UserProvider>().clear();
+                if (context.mounted) {
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    (_) => false,
+                  );
+                }
+              }
+            },
           ),
         ],
       ),

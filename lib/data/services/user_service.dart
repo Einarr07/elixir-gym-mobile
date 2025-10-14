@@ -1,21 +1,41 @@
-import 'dart:convert';
-
+import 'package:dio/dio.dart';
+import 'package:elixir_gym/core/network/api_client.dart';
 import 'package:elixir_gym/data/models/user_model.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
 
 class UserService {
-  final String baseUrl = dotenv.env['API_BASE_URL'] ?? "";
+  final Dio _dio = ApiClient().dio;
 
   Future<Usuario> fetchUsuario(int id) async {
-    final url = Uri.parse('$baseUrl/usuario/$id');
+    final res = await _dio.get('/usuario/$id');
+    return Usuario.fromJson(res.data as Map<String, dynamic>);
+  }
 
-    final response = await http.get(url);
+  Future<Usuario> updateUsuario({
+    required int id,
+    required String nombre,
+    required String apellido,
+    required String correo,
+    String? contrasenia,
+    required telefono,
+    required String fechaNacimiento,
+    required double peso,
+    required double altura,
+    String estado = "Activo",
+  }) async {
+    final payload = {
+      "nombre": nombre,
+      "apellido": apellido,
+      "correo": correo,
+      if (contrasenia != null && contrasenia.isNotEmpty)
+        "contrasenia": contrasenia,
+      "telefono": telefono,
+      "fechaNacimiento": fechaNacimiento,
+      "peso": peso,
+      "altura": altura,
+      "estado": estado,
+    };
 
-    if (response.statusCode == 200) {
-      return Usuario.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Error al cargar usuario: ${response.statusCode}');
-    }
+    final res = await _dio.put('/usuario/actualizar/$id', data: payload);
+    return Usuario.fromJson(res.data as Map<String, dynamic>);
   }
 }
