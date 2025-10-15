@@ -18,7 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _screens = const [
     SchedulesScreen(),
     ReservasScreen(),
-    ProfileScreen(usuarioId: 4),
+    ProfileScreen(),
   ];
 
   void _onItemTapped(int index) {

@@ -1,10 +1,10 @@
-import 'package:elixir_gym/core/theme/app_theme.dart'; // 👈 usa tu theme central
+import 'package:elixir_gym/core/theme/app_theme.dart';
 import 'package:elixir_gym/data/services/auth_service.dart';
 import 'package:elixir_gym/presentation/providers/auth/auth_provider.dart';
 import 'package:elixir_gym/presentation/providers/client/class_provider.dart';
 import 'package:elixir_gym/presentation/providers/client/schedule_provider.dart';
 import 'package:elixir_gym/presentation/providers/client/user_provider.dart';
-import 'package:elixir_gym/presentation/screens/auth/login_screen.dart'; // 👈 pantalla de login
+import 'package:elixir_gym/presentation/screens/auth/login_screen.dart';
 import 'package:elixir_gym/presentation/screens/client/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -22,13 +22,10 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) =>
-              AuthProvider(AuthService())..bootstrap(), // 👈 carga sesión
-        ),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => HorariosProvider()),
         ChangeNotifierProvider(create: (_) => ClaseProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider(AuthService())),
       ],
       child: const MyApp(),
     ),
@@ -49,12 +46,33 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// Decide qué pantalla mostrar según el estado del AuthProvider.
-/// - loading (bootstrap): spinner
-/// - autenticado: HomeScreen
-/// - no autenticado: LoginScreen
-class _AuthGate extends StatelessWidget {
+/// Gate que:
+/// 1) Ejecuta bootstrap una vez al inicio
+/// 2) Muestra spinner mientras carga
+/// 3) Redirige a Home o Login según autenticación
+class _AuthGate extends StatefulWidget {
   const _AuthGate();
+
+  @override
+  State<_AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<_AuthGate> {
+  bool _bootstrapped = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Ejecuta bootstrap una sola vez
+    Future.microtask(() async {
+      final auth = context.read<AuthProvider>();
+      final userProv = context.read<UserProvider>();
+      if (!_bootstrapped) {
+        _bootstrapped = true;
+        await auth.bootstrap(userProv);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,10 +82,6 @@ class _AuthGate extends StatelessWidget {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    if (auth.isAuthenticated) {
-      return const HomeScreen();
-    } else {
-      return const LoginScreen();
-    }
+    return auth.isAuthenticated ? const HomeScreen() : const LoginScreen();
   }
 }

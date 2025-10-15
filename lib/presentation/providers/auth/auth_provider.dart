@@ -1,68 +1,55 @@
-import 'package:elixir_gym/core/storage/auth_storage.dart';
 import 'package:elixir_gym/data/models/user_model.dart';
 import 'package:elixir_gym/data/services/auth_service.dart';
 import 'package:flutter/material.dart';
 
+import '../client/user_provider.dart';
+
 class AuthProvider extends ChangeNotifier {
-  AuthProvider(this._authService);
+  final AuthService _auth;
+  bool isLoading = false;
+  bool isAuthenticated = false;
 
-  final AuthService _authService;
+  AuthProvider(this._auth);
 
-  Usuario? _usuario;
-  bool _loading = false;
-  String? _error;
-
-  Usuario? get user => _usuario;
-
-  bool get isLoading => _loading;
-
-  String? get error => _error;
-
-  bool get isAuthenticated => _usuario != null;
-
-  // App start: If exist save header, get the user.
-  Future<void> bootstrap() async {
-    final header = await AuthStorage.instance.getAuthHeader();
-    if (header == null) {
-      _usuario = null;
-      notifyListeners();
-      return;
-    }
+  /// Llamar en main() al iniciar la app
+  Future<void> bootstrap(UserProvider userProvider) async {
+    isLoading = true;
+    notifyListeners();
     try {
-      _loading = true;
-      notifyListeners();
-      _usuario = await _authService.fetchCurrentUser();
+      final me = await _auth.fetchCurrentUser(); // usa header guardado (si hay)
+      userProvider.setUsuario(me);
+      isAuthenticated = true;
     } catch (_) {
-      await _authService.logout();
-      _usuario = null;
+      isAuthenticated = false;
+      userProvider.clear();
     } finally {
-      _loading = false;
+      isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<bool> login(String email, String password) async {
+  Future<Usuario> login({
+    required String email,
+    required String password,
+    required UserProvider userProvider,
+  }) async {
+    isLoading = true;
+    notifyListeners();
     try {
-      _loading = true;
-      _error = null;
-      notifyListeners();
-      _usuario = await _authService.loginWithBasic(
-        email: email,
-        password: password,
-      );
-      return true;
-    } catch (e) {
-      _error = 'Credenciales invalidas o error de red';
-      return false;
+      final me = await _auth.loginWithBasic(email: email, password: password);
+      userProvider.setUsuario(me);
+      isAuthenticated = true;
+      return me;
     } finally {
-      _loading = false;
+      isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> logout() async {
-    await _authService.logout();
-    _usuario = null;
+  Future<void> logout(UserProvider userProvider) async {
+    await _auth.logout(); // limpia secure storage
+    userProvider.clear(); // limpia usuario en memoria
+    isAuthenticated = false;
     notifyListeners();
   }
 }

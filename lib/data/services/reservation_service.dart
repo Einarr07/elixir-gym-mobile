@@ -21,10 +21,7 @@ class ReservaService {
       "estado": "confirmada",
     };
 
-    print('🟡 Enviando reserva: ${payload}');
-
     final res = await _dio.post('/clase-reservada/crear', data: payload);
-    print('🟢 Respuesta reserva: ${res.statusCode} -> ${res.data}');
 
     return Reserva.fromJson(res.data as Map<String, dynamic>);
   }
