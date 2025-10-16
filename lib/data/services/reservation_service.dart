@@ -16,19 +16,20 @@ class ReservaService {
     final payload = {
       "usuario": {"idUsuario": idUsuario},
       "horario": {"idHorario": horario.idHorario},
-      // el API muestra "2026-10-02" => usar yyyy-MM-dd
+      // el API trabaja con formato yyyy-MM-dd
       "reservacion": DateFormat('yyyy-MM-dd').format(horario.fecha),
       "estado": "confirmada",
     };
 
+    // Nota: ApiClient suele prefixear '/api'; por eso el path es relativo a '/api'
     final res = await _dio.post('/clase-reservada/crear', data: payload);
-
     return Reserva.fromJson(res.data as Map<String, dynamic>);
   }
 
-  /// Obtiene las reservas de un usuario
+  /// Obtiene las reservas del usuario autenticado (endpoint nuevo)
+  /// GET /api/clase-reservada/mis-reservas/{idUsuario}
   Future<List<Reserva>> obtenerReservas(int idUsuario) async {
-    final res = await _dio.get('/clase-reservada/usuario/$idUsuario');
+    final res = await _dio.get('/clase-reservada/mis-reservas/$idUsuario');
 
     final data = res.data;
     final list = (data is List)
@@ -41,5 +42,28 @@ class ReservaService {
         .cast<Map<String, dynamic>>()
         .map((e) => Reserva.fromJson(e))
         .toList();
+  }
+
+  /// Actualiza SOLO el estado de una reserva
+  /// PUT /api/clase-reservada/actualizar/{idReserva}
+  /// Body: { "estado": "pendiente" | "confirmada" | "cancelada" | "completa" | "no asistio" | "expirada" }
+  Future<Reserva> actualizarEstadoReserva({
+    required Reserva reserva,
+    required String estado,
+  }) async {
+    final payload = {
+      "usuario": {"idUsuario": reserva.idUsuario},
+      "horario": {"idHorario": reserva.idHorario},
+      // Debe ir en yyyy-MM-dd (tu modelo ya lo tiene así)
+      "reservacion": reserva.reservacion,
+      "estado": estado,
+    };
+
+    final res = await _dio.put(
+      '/clase-reservada/actualizar/${reserva.idReserva}',
+      data: payload,
+    );
+
+    return Reserva.fromJson(res.data as Map<String, dynamic>);
   }
 }

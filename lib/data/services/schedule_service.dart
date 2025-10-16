@@ -10,4 +10,9 @@ class HorarioService {
     final list = (res.data as List).cast<Map<String, dynamic>>();
     return list.map((e) => Horario.fromJson(e)).toList();
   }
+
+  Future<Horario> obtenerHorarioPorId(int idHorario) async {
+    final res = await _dio.get('/horario-clase/$idHorario');
+    return Horario.fromJson(res.data as Map<String, dynamic>);
+  }
 }

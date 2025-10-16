@@ -1,7 +1,9 @@
 import 'package:elixir_gym/core/theme/app_theme.dart';
 import 'package:elixir_gym/data/services/auth_service.dart';
+import 'package:elixir_gym/data/services/reservation_service.dart';
 import 'package:elixir_gym/presentation/providers/auth/auth_provider.dart';
 import 'package:elixir_gym/presentation/providers/client/class_provider.dart';
+import 'package:elixir_gym/presentation/providers/client/reservation_provider.dart';
 import 'package:elixir_gym/presentation/providers/client/schedule_provider.dart';
 import 'package:elixir_gym/presentation/providers/client/user_provider.dart';
 import 'package:elixir_gym/presentation/screens/auth/login_screen.dart';
@@ -25,6 +27,9 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => HorariosProvider()),
         ChangeNotifierProvider(create: (_) => ClaseProvider()),
+        ChangeNotifierProvider(
+          create: (_) => ReservationProvider(service: ReservaService()),
+        ),
         ChangeNotifierProvider(create: (_) => AuthProvider(AuthService())),
       ],
       child: const MyApp(),
