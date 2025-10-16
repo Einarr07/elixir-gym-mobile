@@ -110,7 +110,7 @@ Widget _HorarioCard(BuildContext context, Horario h) {
     onTap: () {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => ClassDetailScreen(clase: h.clase)),
+        MaterialPageRoute(builder: (_) => ClassDetailScreen(horario: h)),
       );
     },
     child: Container(

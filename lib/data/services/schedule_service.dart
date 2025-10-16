@@ -1,20 +1,18 @@
-import 'dart:convert';
-
+import 'package:dio/dio.dart';
+import 'package:elixir_gym/core/network/api_client.dart';
 import 'package:elixir_gym/data/models/schedule.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
 
 class HorarioService {
-  final String baseUrl = dotenv.env['API_BASE_URL'] ?? "";
+  final Dio _dio = ApiClient().dio;
 
-  Future<List<Horario>> fetchHorario() async {
-    final response = await http.get(Uri.parse('$baseUrl/horario-clase/todos'));
+  Future<List<Horario>> fetchHorarios() async {
+    final res = await _dio.get('/horario-clase/todos');
+    final list = (res.data as List).cast<Map<String, dynamic>>();
+    return list.map((e) => Horario.fromJson(e)).toList();
+  }
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      return data.map((e) => Horario.fromJson(e)).toList();
-    } else {
-      throw Exception("Error al obtener los horarios");
-    }
+  Future<Horario> obtenerHorarioPorId(int idHorario) async {
+    final res = await _dio.get('/horario-clase/$idHorario');
+    return Horario.fromJson(res.data as Map<String, dynamic>);
   }
 }

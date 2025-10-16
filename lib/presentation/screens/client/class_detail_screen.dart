@@ -1,33 +1,74 @@
 import 'package:elixir_gym/core/theme/app_colors.dart';
 import 'package:elixir_gym/data/models/clase.dart';
+import 'package:elixir_gym/data/models/schedule.dart';
+import 'package:elixir_gym/data/services/clase_service.dart';
+import 'package:elixir_gym/presentation/providers/client/class_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class ClassDetailScreen extends StatelessWidget {
-  final Clase clase;
+import '../../../data/services/reservation_service.dart';
+import '../../providers/client/user_provider.dart';
 
-  const ClassDetailScreen({super.key, required this.clase});
+class ClassDetailScreen extends StatefulWidget {
+  final Horario horario;
+
+  const ClassDetailScreen({super.key, required this.horario});
+
+  @override
+  State<ClassDetailScreen> createState() => _ClassDetailScreenState();
+}
+
+class _ClassDetailScreenState extends State<ClassDetailScreen> {
+  final _claseService = ClaseService();
+  Clase? _claseFull;
+  bool _loadingClase = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final idClase = widget.horario.clase.idClase;
+    Future.microtask(() => context.read<ClaseProvider>().fetchClase(idClase));
+    _loadClase();
+  }
+
+  Future<void> _loadClase() async {
+    setState(() => _loadingClase = true);
+    try {
+      final c = await _claseService.fetchClaseById(
+        widget.horario.clase.idClase,
+      );
+      if (mounted) setState(() => _claseFull = c);
+    } catch (_) {
+      // puedes mostrar un SnackBar si lo prefieres
+    } finally {
+      if (mounted) setState(() => _loadingClase = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final claseBase = widget.horario.clase;
+    final clase = _claseFull ?? claseBase;
+
+    final dificultad = clase.dificultad ?? 'No especificada';
+    final capacidad = clase.capacidadMax?.toString() ?? 'N/A';
+
+    bool _booking = false;
+    final _reservaService = ReservaService();
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
         title: const Text(
           'Detalle de la Clase',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: AppColors.textPrimary),
         ),
-        centerTitle: true,
+        backgroundColor: AppColors.background,
+        iconTheme: const IconThemeData(color: AppColors.primary),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(16),
+        child: ListView(
           children: [
             Text(
               clase.nombre,
@@ -37,37 +78,74 @@ class ClassDetailScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Text(
               clase.descripcion,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-              ),
+              style: const TextStyle(color: AppColors.textSecondary),
             ),
-            const SizedBox(height: 20),
-            Text('Dificultad: ${clase.dificultad ?? "No especificada"}'),
+            const SizedBox(height: 16),
 
-            _InfoItem(
+            _row(icon: Icons.flag, label: 'Dificultad', value: dificultad),
+            _row(
               icon: Icons.timer,
               label: 'Duración',
               value: '${clase.duracion} minutos',
             ),
-            _InfoItem(
-              icon: Icons.people,
+            _row(
+              icon: Icons.groups,
               label: 'Capacidad Máxima',
-              value: '${clase.capacidadMax} personas',
+              value: '$capacidad personas',
             ),
-            const SizedBox(height: 20),
-            Text(
-              'Sumérgete en una experiencia de entrenamiento completa que desafiará tus límites y te ayudará a alcanzar tus objetivos. Ideal para quienes buscan un desafío dinámico y motivador.',
-              style: const TextStyle(color: AppColors.textPrimary),
-            ),
-            const Spacer(),
+
+            if (_loadingClase)
+              const Padding(
+                padding: EdgeInsets.only(top: 12),
+                child: LinearProgressIndicator(),
+              ),
+
+            const SizedBox(height: 40),
+
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: _booking
+                    ? null
+                    : () async {
+                        final user = context.read<UserProvider>().usuario;
+                        if (user == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Inicia sesión para reservar'),
+                            ),
+                          );
+                          return;
+                        }
+
+                        setState(() => _booking = true);
+                        try {
+                          final reserva = await _reservaService.crearReserva(
+                            idUsuario: user.idUsuario,
+                            horario: widget.horario,
+                          );
+
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('¡Reserva creada con éxito!'),
+                            ),
+                          );
+
+                          // opcional: navega a pantalla de "Mis Reservas" o vuelve atrás
+                          // Navigator.pop(context, reserva);
+                        } catch (e) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('No se pudo reservar: $e')),
+                          );
+                        } finally {
+                          if (mounted) setState(() => _booking = false);
+                        }
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(
@@ -75,13 +153,22 @@ class ClassDetailScreen extends StatelessWidget {
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: const Text(
-                  'Reservar Cupo',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: _booking
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        'Reservar Cupo',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
           ],
@@ -89,35 +176,31 @@ class ClassDetailScreen extends StatelessWidget {
       ),
     );
   }
-}
 
-class _InfoItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
-  const _InfoItem({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
+  Widget _row({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.primary, size: 22),
-          const SizedBox(width: 10),
+          Icon(icon, color: AppColors.primary, size: 20),
+          const SizedBox(width: 8),
           Text(
             '$label: ',
             style: const TextStyle(
-              color: AppColors.textSecondary,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
-          Text(value, style: const TextStyle(color: AppColors.textPrimary)),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
         ],
       ),
     );

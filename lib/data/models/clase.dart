@@ -1,5 +1,5 @@
 class Clase {
-  final int id;
+  final int idClase;
   final String nombre;
   final String descripcion;
   final String? dificultad;
@@ -7,7 +7,7 @@ class Clase {
   final int? capacidadMax;
 
   Clase({
-    required this.id,
+    required this.idClase,
     required this.nombre,
     required this.descripcion,
     this.dificultad,
@@ -17,13 +17,12 @@ class Clase {
 
   factory Clase.fromJson(Map<String, dynamic> json) {
     return Clase(
-      id: json['idClase'],
+      idClase: json['idClase'],
       nombre: json['nombre'] ?? 'Sin nombre',
       descripcion: json['descripcion'] ?? 'Sin descripción',
       dificultad: json['dificultad'],
-      // puede venir null
       duracion: json['duracion'] ?? 0,
-      capacidadMax: json['capacidad_max'], // puede venir null
+      capacidadMax: json['capacidad_max'],
     );
   }
 }
