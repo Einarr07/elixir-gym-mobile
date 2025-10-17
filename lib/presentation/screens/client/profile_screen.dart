@@ -1,6 +1,6 @@
+// lib/presentation/screens/client/profile_screen.dart
 import 'package:elixir_gym/core/theme/app_colors.dart';
 import 'package:elixir_gym/presentation/providers/auth/auth_provider.dart';
-import 'package:elixir_gym/presentation/providers/client/user_provider.dart';
 import 'package:elixir_gym/presentation/screens/auth/login_screen.dart';
 import 'package:elixir_gym/presentation/screens/client/edit_profile_screen.dart';
 import 'package:flutter/material.dart';
@@ -9,14 +9,14 @@ import 'package:provider/provider.dart';
 import '../../../data/models/user_model.dart';
 
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+  const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final usuario = context.watch<UserProvider>().usuario;
+    final auth = context.watch<AuthProvider>();
+    final Usuario? usuario = auth.usuario;
 
-    // Mientras el bootstrap carga el usuario (o si aún no hay),
-    // muestra un loader sencillo.
+    // Si aún no hay usuario (p.ej., primer frame), muestra loader
     if (usuario == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -39,24 +39,23 @@ class ProfileScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.edit, color: AppColors.textPrimary),
             onPressed: () async {
-              final current = context.read<UserProvider>().usuario;
-              if (current == null) return;
-
               final updated = await Navigator.push<Usuario?>(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => EditProfileScreen(usuario: current),
+                  builder: (_) => EditProfileScreen(usuario: usuario),
                 ),
               );
 
               if (updated != null && context.mounted) {
-                context.read<UserProvider>().setUsuario(updated);
+                // O bien refrescamos desde backend para mantener fuente de verdad
+                await context.read<AuthProvider>().refreshMe();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Perfil actualizado')),
                 );
               }
             },
           ),
+
           // Cerrar sesión
           IconButton(
             icon: const Icon(Icons.logout, color: AppColors.primary),
@@ -81,11 +80,7 @@ class ProfileScreen extends StatelessWidget {
               );
 
               if (confirm == true) {
-                // 👇 pasa el UserProvider como argumento
-                await context.read<AuthProvider>().logout(
-                  context.read<UserProvider>(),
-                );
-
+                await context.read<AuthProvider>().logout();
                 if (context.mounted) {
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -114,7 +109,6 @@ class _ProfileBody extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Encabezado
           Text(
             '${usuario.nombre} ${usuario.apellido}',
             style: const TextStyle(
@@ -141,8 +135,6 @@ class _ProfileBody extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 30),
-
-          // Información personal
           const Align(
             alignment: Alignment.centerLeft,
             child: Text(
@@ -155,7 +147,6 @@ class _ProfileBody extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-
           _infoTile('Peso', '${usuario.peso} kg'),
           _infoTile('Altura', '${usuario.altura} m'),
           _infoTile('Fecha Nacimiento', usuario.fechaNacimiento),
