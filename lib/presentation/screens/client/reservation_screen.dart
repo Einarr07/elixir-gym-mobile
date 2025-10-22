@@ -1,31 +1,40 @@
+// lib/presentation/screens/client/reservation_screen.dart
 import 'package:elixir_gym/core/theme/app_colors.dart';
 import 'package:elixir_gym/data/models/reservation.dart';
+import 'package:elixir_gym/presentation/providers/auth/auth_provider.dart';
 import 'package:elixir_gym/presentation/providers/client/reservation_provider.dart';
-import 'package:elixir_gym/presentation/providers/client/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-class ReservasScreen extends StatefulWidget {
-  const ReservasScreen({super.key});
+class ReservationScreen extends StatefulWidget {
+  const ReservationScreen({super.key});
 
   @override
-  State<ReservasScreen> createState() => _ReservasScreenState();
+  State<ReservationScreen> createState() => _ReservasScreenState();
 }
 
-class _ReservasScreenState extends State<ReservasScreen> {
+class _ReservasScreenState extends State<ReservationScreen> {
   int? _userId;
+  bool _loadedOnce = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final user = context.read<UserProvider>().usuario;
-      if (user != null) {
-        _userId = user.idUsuario;
-        context.read<ReservationProvider>().load(user.idUsuario);
-      }
-    });
+    // Cargar después del primer frame para leer providers con context
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureLoaded());
+  }
+
+  void _ensureLoaded() {
+    final auth = context.read<AuthProvider>();
+    final u = auth.usuario;
+    if (u == null) return;
+
+    if (_userId != u.idUsuario || !_loadedOnce) {
+      _userId = u.idUsuario;
+      _loadedOnce = true;
+      context.read<ReservationProvider>().load(_userId!);
+    }
   }
 
   Future<void> _refresh() async {
@@ -36,6 +45,12 @@ class _ReservasScreenState extends State<ReservasScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Si el usuario aparece luego del bootstrap, intenta cargar
+    final auth = context.watch<AuthProvider>();
+    if (auth.usuario != null && auth.usuario!.idUsuario != _userId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _ensureLoaded());
+    }
+
     final vm = context.watch<ReservationProvider>();
 
     return Scaffold(
@@ -111,10 +126,7 @@ class _ReservasScreenState extends State<ReservasScreen> {
                         : fechaTxt,
                     estado: r.estado.toLowerCase(),
                     onEditEstado: () => _editarEstado(context, r),
-                    onTap: () {
-                      // Detalle de clase si lo deseas:
-                      // Navigator.pushNamed(context, '/class-detail', arguments: ...);
-                    },
+                    onTap: () {},
                   );
                 },
               ),
@@ -233,6 +245,10 @@ class _ReservasScreenState extends State<ReservasScreen> {
             ),
           ),
         );
+        // Refresca lista si se actualizó bien
+        if (ok && _userId != null) {
+          context.read<ReservationProvider>().load(_userId!);
+        }
       }
     }
   }
@@ -263,7 +279,7 @@ class _ReservasScreenState extends State<ReservasScreen> {
   }
 }
 
-// ======================= Card UI sin overflow =======================
+// ======================= Card UI =======================
 
 class _ReservaCard extends StatelessWidget {
   final int idReserva;
@@ -308,7 +324,6 @@ class _ReservaCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Título (clase)
             Text(
               claseNombre,
               maxLines: 1,
@@ -320,7 +335,6 @@ class _ReservaCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            // Subtítulo (entrenador)
             Text(
               'Con $entrenadorNombre',
               maxLines: 1,
@@ -331,7 +345,6 @@ class _ReservaCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            // Fecha (y horas si aplica)
             Text(
               fechaTexto,
               style: const TextStyle(
@@ -340,7 +353,6 @@ class _ReservaCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            // Fila inferior: chip de estado + botón Editar
             Row(
               children: [
                 Container(

@@ -1,7 +1,8 @@
+// lib/presentation/screens/auth/login_screen.dart
 import 'package:elixir_gym/core/theme/app_colors.dart';
 import 'package:elixir_gym/presentation/providers/auth/auth_provider.dart';
 import 'package:elixir_gym/presentation/providers/client/user_provider.dart';
-import 'package:elixir_gym/presentation/screens/client/home_screen.dart';
+import 'package:elixir_gym/presentation/shells/role_based_home.dart'; // <--- usa home neutral
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -28,26 +29,29 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
+    // UX: cierra el teclado
+    FocusScope.of(context).unfocus();
+
     final auth = context.read<AuthProvider>();
     final userProv = context.read<UserProvider>();
 
     try {
-      await auth.login(
-        email: _email.text.trim(),
-        password: _password.text,
-        userProvider: userProv, // <- setea el usuario autenticado
-      );
+      await auth.login(email: _email.text.trim(), password: _password.text);
 
       if (!mounted) return;
+
+      // ✅ En lugar de forzar HomeScreen (cliente),
+      // manda al "router" neutral que decide por rol.
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(builder: (_) => const RoleBasedHome()),
         (_) => false,
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
+      final msg = e.toString().contains('Credenciales inválidas')
+          ? 'Credenciales inválidas'
+          : 'No se pudo iniciar sesión. Revisa tu conexión o intenta de nuevo.';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
   }
 
@@ -86,6 +90,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextFormField(
                   controller: _email,
                   keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [
+                    AutofillHints.username,
+                    AutofillHints.email,
+                  ],
                   decoration: const InputDecoration(
                     labelText: 'Correo electrónico',
                     hintText: 'tu@correo.com',
@@ -100,6 +109,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextFormField(
                   controller: _password,
                   obscureText: _obscure,
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _submit(),
+                  autofillHints: const [AutofillHints.password],
                   decoration: InputDecoration(
                     labelText: 'Contraseña',
                     hintText: '••••••••',
