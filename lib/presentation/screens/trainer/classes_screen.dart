@@ -122,8 +122,18 @@ class _ClaseCard extends StatelessWidget {
           color: AppColors.textSecondary,
           size: 18,
         ),
-        onTap: () {
-          Navigator.pushNamed(context, '/crear-clase');
+        onTap: () async {
+          final actualizado = await Navigator.pushNamed(
+            context,
+            '/editar-clase',
+            arguments: clase.idClase,
+          );
+          if (actualizado == true && context.mounted) {
+            Provider.of<TrainerClaseProvider>(
+              context,
+              listen: false,
+            ).loadClases();
+          }
         },
       ),
     );

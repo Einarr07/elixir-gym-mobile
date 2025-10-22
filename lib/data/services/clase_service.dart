@@ -41,4 +41,34 @@ class ClaseService {
       );
     }
   }
+
+  Future<void> updateClase({
+    required int idClase,
+    required String nombre,
+    required String descripcion,
+    required String dificultad,
+    required int duracion,
+    required int capacidadMax,
+  }) async {
+    final data = {
+      "idClase": idClase,
+      "nombre": nombre,
+      "descripcion": descripcion,
+      "dificultad": dificultad,
+      "duracion": duracion,
+      "capacidad_max": capacidadMax,
+    };
+
+    try {
+      final res = await _dio.put('/clase/actualizar/$idClase', data: data);
+    } on DioException catch (e) {
+      throw Exception(
+        'Error al actualizar la clase: ${e.response?.data ?? e.message} ',
+      );
+    }
+  }
+
+  Future<void> deleteClase(int idClase) async {
+    await _dio.delete('/clase/eliminar/$idClase');
+  }
 }
