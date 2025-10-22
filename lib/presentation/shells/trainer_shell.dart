@@ -1,4 +1,6 @@
 // lib/presentation/shells/trainer_shell.dart
+import 'package:elixir_gym/presentation/screens/client/profile_screen.dart';
+import 'package:elixir_gym/presentation/screens/trainer/classes_screen.dart';
 import 'package:flutter/material.dart';
 
 class TrainerShell extends StatefulWidget {
@@ -10,11 +12,7 @@ class TrainerShell extends StatefulWidget {
 
 class _TrainerShellState extends State<TrainerShell> {
   int idx = 0;
-  final pages = const [
-    Center(child: Text('Agenda Entrenador')),
-    Center(child: Text('Alumnos')),
-    Center(child: Text('Perfil Entrenador')),
-  ];
+  final pages = const [ClassesScreen(), ProfileScreen()];
 
   @override
   Widget build(BuildContext context) {
@@ -25,10 +23,9 @@ class _TrainerShellState extends State<TrainerShell> {
         onTap: (i) => setState(() => idx = i),
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month),
-            label: 'Agenda',
+            icon: Icon(Icons.calendar_month_sharp),
+            label: 'Clases',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Alumnos'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
         ],
       ),

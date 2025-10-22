@@ -8,8 +8,10 @@ import 'package:elixir_gym/presentation/providers/client/class_provider.dart';
 import 'package:elixir_gym/presentation/providers/client/reservation_provider.dart';
 import 'package:elixir_gym/presentation/providers/client/schedule_provider.dart';
 import 'package:elixir_gym/presentation/providers/client/user_provider.dart';
+import 'package:elixir_gym/presentation/providers/trainer/class_provider.dart';
 import 'package:elixir_gym/presentation/screens/auth/login_screen.dart';
 import 'package:elixir_gym/presentation/shells/role_based_home.dart';
+import 'package:elixir_gym/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -30,13 +32,15 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        // Si aún usas estos providers del lado cliente, déjalos:
+        //cliente
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => HorariosProvider()),
         ChangeNotifierProvider(create: (_) => ClaseProvider()),
         ChangeNotifierProvider(
           create: (_) => ReservationProvider(service: ReservaService()),
         ),
+        //entrenador
+        ChangeNotifierProvider(create: (_) => TrainerClaseProvider()),
 
         // AuthProvider (Alternativa A: sin UserProvider acoplado)
         ChangeNotifierProvider(create: (_) => AuthProvider(AuthService())),
@@ -56,6 +60,7 @@ class MyApp extends StatelessWidget {
       title: 'ElixirGym',
       theme: appTheme(),
       home: const _AuthGate(),
+      routes: AppRoutes.routes,
     );
   }
 }
