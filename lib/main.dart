@@ -9,6 +9,7 @@ import 'package:elixir_gym/presentation/providers/client/reservation_provider.da
 import 'package:elixir_gym/presentation/providers/client/schedule_provider.dart';
 import 'package:elixir_gym/presentation/providers/client/user_provider.dart';
 import 'package:elixir_gym/presentation/providers/trainer/class_provider.dart';
+import 'package:elixir_gym/presentation/providers/trainer/training_provider.dart';
 import 'package:elixir_gym/presentation/screens/auth/login_screen.dart';
 import 'package:elixir_gym/presentation/shells/role_based_home.dart';
 import 'package:elixir_gym/routes/routes.dart';
@@ -41,6 +42,7 @@ Future<void> main() async {
         ),
         //entrenador
         ChangeNotifierProvider(create: (_) => TrainerClaseProvider()),
+        ChangeNotifierProvider(create: (_) => TrainerTrainingProvider()),
 
         // AuthProvider (Alternativa A: sin UserProvider acoplado)
         ChangeNotifierProvider(create: (_) => AuthProvider(AuthService())),
