@@ -97,24 +97,53 @@ class _ClaseCard extends StatelessWidget {
 
   const _ClaseCard({required this.clase});
 
+  Color _getDificultadColor(String? dificultad) {
+    if (dificultad == null) return AppColors.primary;
+
+    switch (dificultad.toUpperCase()) {
+      case 'PRINCIPIANTE':
+      case 'BÁSICO':
+        return Colors.green;
+      case 'INTERMEDIO':
+        return Colors.orange;
+      case 'AVANZADO':
+        return Colors.redAccent;
+      default:
+        return AppColors.primary;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: AppColors.background,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      margin: const EdgeInsets.only(bottom: 12),
+    final color = _getDificultadColor(clase.dificultad);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.4), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.15),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
       child: ListTile(
-        leading: Icon(Icons.fitness_center, color: AppColors.primary, size: 28),
+        leading: CircleAvatar(
+          backgroundColor: color.withOpacity(0.9),
+          radius: 22,
+          child: const Icon(Icons.fitness_center, color: Colors.black),
+        ),
         title: Text(
           clase.nombre,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(color: color, fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
           'Duración: ${clase.duracion} min'
-          '${clase.dificultad != null ? ' • Dificultad: ${clase.dificultad}' : ''}',
+          '${clase.dificultad != null ? ' • ${clase.dificultad}' : ''}',
           style: const TextStyle(color: AppColors.textSecondary),
         ),
         trailing: const Icon(

@@ -132,7 +132,7 @@ class _ClassEditScreenState extends State<ClassEditScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Clase eliminada correctamente'),
-            backgroundColor: Colors.green,
+            backgroundColor: Colors.red,
           ),
         );
         Navigator.pop(context, true); // Volver al listado
