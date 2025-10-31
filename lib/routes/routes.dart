@@ -6,6 +6,8 @@ import 'package:elixir_gym/presentation/screens/trainer/exercise_creation_screen
 import 'package:elixir_gym/presentation/screens/trainer/training_details_screen.dart';
 import 'package:flutter/material.dart';
 
+import '../presentation/screens/trainer/assing_exercise_screen.dart';
+
 class AppRoutes {
   static Map<String, WidgetBuilder> routes = {
     '/clases': (context) => const ClassesScreen(),
@@ -20,6 +22,12 @@ class AppRoutes {
           ModalRoute.of(context)!.settings.arguments as Entrenamiento;
       return TrainingDetailScreen(entrenamiento: entrenamiento);
     },
+    //
+    '/asignar-ejercicio': (context) {
+      final trainingId = ModalRoute.of(context)!.settings.arguments as int;
+      return AssignExerciseScreen(trainingId: trainingId);
+    },
+    // Ejercicios
     '/crear-ejercicio': (context) => const ExerciseCreationScreen(),
   };
 }

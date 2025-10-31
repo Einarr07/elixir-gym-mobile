@@ -5,14 +5,16 @@ import 'package:elixir_gym/data/models/training.dart';
 class TrainingService {
   final Dio _dio = ApiClient().dio;
 
+  static const _base = '/entrenamientos';
+
   Future<List<Entrenamiento>> fetchAllTrainings() async {
-    final res = await _dio.get('/entrenamientos/todos');
+    final res = await _dio.get('$_base/todos');
     final list = (res.data as List).cast<Map<String, dynamic>>();
     return list.map((e) => Entrenamiento.fromJson(e)).toList();
   }
 
   Future<Entrenamiento> featchTrainingById(int idEntrenamiento) async {
-    final res = await _dio.get('/entrenamientos/$idEntrenamiento');
+    final res = await _dio.get('$_base/$idEntrenamiento');
     return Entrenamiento.fromJson(res.data as Map<String, dynamic>);
   }
 
@@ -29,7 +31,7 @@ class TrainingService {
       "semanas_de_duracion": semanasDeDuracion,
     };
     try {
-      final res = await _dio.post('/entrenamientos/crear', data: data);
+      final res = await _dio.post('$_base/crear', data: data);
       return Entrenamiento.fromJson(res.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw Exception(
@@ -55,7 +57,7 @@ class TrainingService {
 
     try {
       final res = await _dio.put(
-        '/entrenamientos/actualizar/$idEntrenamiento',
+        '$_base/actualizar/$idEntrenamiento',
         data: data,
       );
     } on DioException catch (e) {
@@ -67,8 +69,14 @@ class TrainingService {
 
   Future<void> deleteTraining(int idEntrenamiento) async {
     try {
-      await _dio.delete('/entrenamientos/eliminar/$idEntrenamiento');
+      await _dio.delete('$_base/eliminar/$idEntrenamiento');
     } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        final responseData = e.response?.data;
+        if (responseData is Map && responseData.containsKey('message')) {
+          throw Exception(responseData['message']);
+        }
+      }
       throw Exception(
         'Error al eliminar entrenamiento: ${e.response?.data ?? e.message}',
       );

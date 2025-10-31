@@ -24,6 +24,27 @@ class TrainingExerciseService {
     }
   }
 
+  Future<List<TrainingExercise>> fetchAllTraining(int idEntrenamiento) async {
+    try {
+      final Response res = await _dio.get(
+        '$_base/entrenamiento/$idEntrenamiento',
+      );
+      _ensureOk(res);
+      final data = res.data;
+      if (data is List) {
+        return data
+            .map((e) => TrainingExercise.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      throw Exception('Respuesta inesperada: Se esperaba una lista');
+    } on DioException catch (e) {
+      throw _wrap(
+        'Cargar lista de ejercicios de 1 entrenamiento especifico',
+        e,
+      );
+    }
+  }
+
   Future<TrainingExercise> fetchById(
     int idEntrenamiento,
     int idEjercicio,
