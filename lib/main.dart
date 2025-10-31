@@ -2,6 +2,9 @@
 import 'package:elixir_gym/core/network/api_client.dart';
 import 'package:elixir_gym/core/theme/app_theme.dart';
 import 'package:elixir_gym/data/services/auth_service.dart';
+import 'package:elixir_gym/data/services/equipment_service.dart';
+import 'package:elixir_gym/data/services/exercise_service.dart';
+import 'package:elixir_gym/data/services/muscle_group_service.dart';
 import 'package:elixir_gym/data/services/reservation_service.dart';
 import 'package:elixir_gym/presentation/providers/auth/auth_provider.dart';
 import 'package:elixir_gym/presentation/providers/client/class_provider.dart';
@@ -9,6 +12,8 @@ import 'package:elixir_gym/presentation/providers/client/reservation_provider.da
 import 'package:elixir_gym/presentation/providers/client/schedule_provider.dart';
 import 'package:elixir_gym/presentation/providers/client/user_provider.dart';
 import 'package:elixir_gym/presentation/providers/trainer/class_provider.dart';
+import 'package:elixir_gym/presentation/providers/trainer/equipment_provider.dart';
+import 'package:elixir_gym/presentation/providers/trainer/exercise_provider.dart';
 import 'package:elixir_gym/presentation/providers/trainer/training_provider.dart';
 import 'package:elixir_gym/presentation/screens/auth/login_screen.dart';
 import 'package:elixir_gym/presentation/shells/role_based_home.dart';
@@ -43,6 +48,16 @@ Future<void> main() async {
         //entrenador
         ChangeNotifierProvider(create: (_) => TrainerClaseProvider()),
         ChangeNotifierProvider(create: (_) => TrainerTrainingProvider()),
+        ChangeNotifierProvider(
+          create: (_) => TrainerExerciseProvider(
+            ExerciseService(),
+            MuscleGroupService(),
+            EquipmentService(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => TrainerEquipmentProvider(EquipmentService()),
+        ),
 
         // AuthProvider (Alternativa A: sin UserProvider acoplado)
         ChangeNotifierProvider(create: (_) => AuthProvider(AuthService())),

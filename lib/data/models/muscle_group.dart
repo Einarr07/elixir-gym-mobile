@@ -1,7 +1,7 @@
 class MuscleGroup {
   final int idGrupoMuscular;
-  final String nombre;
-  final String descripcion;
+  final String? nombre;
+  final String? descripcion;
 
   MuscleGroup({
     required this.idGrupoMuscular,

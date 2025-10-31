@@ -19,7 +19,7 @@ class ExerciseService {
       if (data is List) {
         return data
             .map((e) => Exercise.fromJson(e as Map<String, dynamic>))
-            .toList(growable: false);
+            .toList();
       }
       throw Exception('Respuesta inesperada: se esperaba una lista');
     } on DioException catch (e) {
@@ -126,7 +126,7 @@ class ExerciseService {
       'grupo_muscular': {'idGrupoMuscular': idGrupoMuscular},
       'equipos': idsEquipos.map((id) => {'idEquipo': id}).toList(),
     };
-    // No mandamos nulos para no sobreescribir con null en PUT
+
     map.removeWhere((_, v) => v == null);
     return map;
   }
