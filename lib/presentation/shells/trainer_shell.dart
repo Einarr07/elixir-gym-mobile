@@ -4,6 +4,7 @@ import 'package:elixir_gym/core/theme/app_colors.dart';
 import 'package:elixir_gym/presentation/screens/client/profile_screen.dart';
 import 'package:elixir_gym/presentation/screens/trainer/classes_screen.dart';
 import 'package:elixir_gym/presentation/screens/trainer/exercises_screen.dart';
+import 'package:elixir_gym/presentation/screens/trainer/schedule_screen.dart';
 import 'package:elixir_gym/presentation/screens/trainer/training_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -20,6 +21,7 @@ class _TrainerShellState extends State<TrainerShell> {
   // Mantén const si tus pantallas tienen constructor const.
   late final List<Widget> pages = const [
     ClassesScreen(),
+    ScheduleScreen(),
     TrainingScreen(),
     ExercisesScreen(),
     ProfileScreen(),
@@ -43,6 +45,10 @@ class _TrainerShellState extends State<TrainerShell> {
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_month_sharp),
             label: 'Clases',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.watch_later),
+            label: 'Horarios',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.directions_run),

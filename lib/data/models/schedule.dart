@@ -1,6 +1,6 @@
 import 'clase.dart';
 
-class Horario {
+class Schedule {
   final int idHorario;
   final DateTime fecha;
   final String horaInicio;
@@ -8,7 +8,7 @@ class Horario {
   final Clase clase;
   final Entrenador entrenador;
 
-  Horario({
+  Schedule({
     required this.idHorario,
     required this.fecha,
     required this.horaInicio,
@@ -17,7 +17,7 @@ class Horario {
     required this.entrenador,
   });
 
-  factory Horario.fromJson(Map<String, dynamic> json) => Horario(
+  factory Schedule.fromJson(Map<String, dynamic> json) => Schedule(
     idHorario: json['idHorario'],
     fecha: DateTime.parse(json['fecha']),
     horaInicio: json['hora_inicio'],

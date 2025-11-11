@@ -4,14 +4,14 @@ import '../../../data/models/schedule.dart';
 import '../../../data/services/schedule_service.dart';
 
 class HorariosProvider extends ChangeNotifier {
-  final _service = HorarioService();
+  final _service = ScheduleService();
 
   bool isLoading = false;
-  List<Horario> horarios = [];
-  Horario? _horarioSeleccionado;
+  List<Schedule> horarios = [];
+  Schedule? _horarioSeleccionado;
   String? errorMessage;
 
-  Horario? get horarioSeleccionado => _horarioSeleccionado;
+  Schedule? get horarioSeleccionado => _horarioSeleccionado;
 
   Future<void> fetchHorarios() async {
     isLoading = true;
@@ -19,7 +19,7 @@ class HorariosProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      horarios = await _service.fetchHorarios();
+      horarios = await _service.fetchAll();
     } catch (e) {
       errorMessage = 'Error al cargar horarios: $e';
     }
@@ -28,8 +28,8 @@ class HorariosProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void seleccionarHorario(Horario horario) {
-    _horarioSeleccionado = horario;
+  void seleccionarHorario(Schedule Schedule) {
+    _horarioSeleccionado = Schedule;
     notifyListeners();
   }
 }

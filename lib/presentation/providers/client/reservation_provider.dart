@@ -1,5 +1,5 @@
 // lib/presentation/providers/client/reservation_provider.dart
-import 'package:elixir_gym/data/models/reservation.dart';
+import 'package:elixir_gym/data/models/reservation_class.dart';
 import 'package:elixir_gym/data/models/schedule.dart';
 import 'package:elixir_gym/data/services/reservation_service.dart';
 import 'package:elixir_gym/data/services/schedule_service.dart';
@@ -9,20 +9,20 @@ class ReservationProvider extends ChangeNotifier {
   final ReservaService _service;
 
   // Enriquecimiento desde horarios (con caché)
-  final HorarioService _horarioService = HorarioService();
-  final Map<int, Horario> _horarioCache = {};
+  final ScheduleService _horarioService = ScheduleService();
+  final Map<int, Schedule> _horarioCache = {};
 
   ReservationProvider({required ReservaService service}) : _service = service;
 
   bool _loading = false;
   String? _error;
-  List<Reserva> _items = [];
+  List<ReservationClass> _items = [];
 
   bool get loading => _loading;
 
   String? get error => _error;
 
-  List<Reserva> get items => List.unmodifiable(_items);
+  List<ReservationClass> get items => List.unmodifiable(_items);
 
   Future<void> load(int idUsuario) async {
     _setLoading(true);
@@ -46,27 +46,29 @@ class ReservationProvider extends ChangeNotifier {
     }
   }
 
-  Reserva? getById(int idReserva) {
+  ReservationClass? getById(int idReserva) {
     final i = _items.indexWhere((r) => r.idReserva == idReserva);
     return i == -1 ? null : _items[i];
   }
 
-  /// Actualiza estado enviando los campos obligatorios del propio objeto 'reserva'
+  /// Actualiza estado enviando los campos obligatorios del propio objeto 'ReservationClass'
   /// y luego fusiona con datos de Horario si todavía faltaran.
   Future<bool> actualizarEstado({
-    required Reserva reserva,
+    required ReservationClass reservationClass,
     required String estado,
   }) async {
     try {
       final updated = await _service.actualizarEstadoReserva(
-        reserva: reserva,
+        reservaClass: reservationClass,
         estado: estado,
       );
 
       // Completa (si hace falta) con datos del horario
       final merged = await _mergeWithHorario(updated);
 
-      final i = _items.indexWhere((r) => r.idReserva == reserva.idReserva);
+      final i = _items.indexWhere(
+        (r) => r.idReserva == reservationClass.idReserva,
+      );
       if (i != -1) {
         _items[i] = merged;
       } else {
@@ -114,7 +116,7 @@ class ReservationProvider extends ChangeNotifier {
 
       if (idsPendientes.isNotEmpty) {
         final fetched = await Future.wait(
-          idsPendientes.map(_horarioService.obtenerHorarioPorId),
+          idsPendientes.map(_horarioService.fetchById),
         );
         for (final h in fetched) {
           _horarioCache[h.idHorario] = h;
@@ -131,7 +133,7 @@ class ReservationProvider extends ChangeNotifier {
 
       // Fallback: intenta bajar todos y reintentar fusión
       try {
-        final todos = await _horarioService.fetchHorarios();
+        final todos = await _horarioService.fetchAll();
         for (final h in todos) {
           _horarioCache[h.idHorario] = h;
         }
@@ -146,20 +148,20 @@ class ReservationProvider extends ChangeNotifier {
   }
 
   /// Obtiene (y cachea) un horario por id; si falla, intenta fetchHorarios()
-  Future<Horario?> _getHorarioFor(int idHorario) async {
+  Future<Schedule?> _getHorarioFor(int idHorario) async {
     if (idHorario == 0) return null;
 
     final cached = _horarioCache[idHorario];
     if (cached != null) return cached;
 
     try {
-      final h = await _horarioService.obtenerHorarioPorId(idHorario);
+      final h = await _horarioService.fetchById(idHorario);
       _horarioCache[h.idHorario] = h;
       return h;
     } catch (e) {
       debugPrint('obtenerHorarioPorId($idHorario) falló: $e');
       try {
-        final todos = await _horarioService.fetchHorarios();
+        final todos = await _horarioService.fetchAll();
         for (final h in todos) {
           _horarioCache[h.idHorario] = h;
         }
@@ -171,12 +173,12 @@ class ReservationProvider extends ChangeNotifier {
     }
   }
 
-  /// Fusiona Reserva + Horario (solo rellena campos nulos)
-  Reserva _mergeLocal(Reserva r, Horario? h) {
+  /// Fusiona ReservationClass + Horario (solo rellena campos nulos)
+  ReservationClass _mergeLocal(ReservationClass r, Schedule? h) {
     if (h == null) return r;
     final entrenadorNombre = '${h.entrenador.nombre} ${h.entrenador.apellido}'
         .trim();
-    return Reserva(
+    return ReservationClass(
       idReserva: r.idReserva,
       idUsuario: r.idUsuario,
       idHorario: r.idHorario,
@@ -192,7 +194,7 @@ class ReservationProvider extends ChangeNotifier {
   }
 
   /// Igual que arriba pero pudiendo esperar al fetch si es necesario
-  Future<Reserva> _mergeWithHorario(Reserva r) async {
+  Future<ReservationClass> _mergeWithHorario(ReservationClass r) async {
     final h = await _getHorarioFor(r.idHorario);
     return _mergeLocal(r, h);
   }

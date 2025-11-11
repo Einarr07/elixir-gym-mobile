@@ -16,7 +16,7 @@ class SchedulesScreen extends StatefulWidget {
 }
 
 class _SchedulesScreenState extends State<SchedulesScreen> {
-  final horarioService = HorarioService();
+  final horarioService = ScheduleService();
 
   @override
   void initState() {
@@ -69,7 +69,7 @@ Widget _buildBody(BuildContext context, HorariosProvider provider) {
     );
   }
 
-  final groupedByDate = <String, List<Horario>>{};
+  final groupedByDate = <String, List<Schedule>>{};
   for (var h in horarios) {
     final date = DateFormat('yyyy-MM-dd').format(h.fecha);
     groupedByDate.putIfAbsent(date, () => []).add(h);
@@ -102,15 +102,15 @@ Widget _buildBody(BuildContext context, HorariosProvider provider) {
   );
 }
 
-Widget _HorarioCard(BuildContext context, Horario h) {
-  final inicio = _formatearHora(h.horaInicio);
-  final fin = _formatearHora(h.horaFin);
+Widget _HorarioCard(BuildContext context, Schedule schedule) {
+  final inicio = _formatearHora(schedule.horaInicio);
+  final fin = _formatearHora(schedule.horaFin);
 
   return GestureDetector(
     onTap: () {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => ClassDetailScreen(horario: h)),
+        MaterialPageRoute(builder: (_) => ClassDetailScreen(horario: schedule)),
       );
     },
     child: Container(
@@ -127,7 +127,7 @@ Widget _HorarioCard(BuildContext context, Horario h) {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${h.clase.nombre} con ${h.entrenador.nombre} ${h.entrenador.apellido}',
+                  '${schedule.clase.nombre} con ${schedule.entrenador.nombre} ${schedule.entrenador.apellido}',
                   style: const TextStyle(
                     color: AppColors.primary,
                     fontSize: 16,
