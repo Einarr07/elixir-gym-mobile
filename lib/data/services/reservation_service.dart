@@ -1,17 +1,17 @@
 // lib/data/services/reservation_service.dart
 import 'package:dio/dio.dart';
 import 'package:elixir_gym/core/network/api_client.dart';
-import 'package:elixir_gym/data/models/reservation.dart';
+import 'package:elixir_gym/data/models/reservation_class.dart';
 import 'package:elixir_gym/data/models/schedule.dart';
 import 'package:intl/intl.dart';
 
 class ReservaService {
   final Dio _dio = ApiClient().dio;
 
-  /// Crea una reserva CONFIRMADA para el usuario en el horario dado
-  Future<Reserva> crearReserva({
+  /// Crea una Reserva CONFIRMADA para el usuario en el horario dado
+  Future<ReservationClass> crearReserva({
     required int idUsuario,
-    required Horario horario,
+    required Schedule horario,
   }) async {
     final payload = {
       "usuario": {"idUsuario": idUsuario},
@@ -23,12 +23,12 @@ class ReservaService {
 
     // Nota: ApiClient suele prefixear '/api'; por eso el path es relativo a '/api'
     final res = await _dio.post('/clase-reservada/crear', data: payload);
-    return Reserva.fromJson(res.data as Map<String, dynamic>);
+    return ReservationClass.fromJson(res.data as Map<String, dynamic>);
   }
 
   /// Obtiene las reservas del usuario autenticado (endpoint nuevo)
   /// GET /api/clase-reservada/mis-reservas/{idUsuario}
-  Future<List<Reserva>> obtenerReservas(int idUsuario) async {
+  Future<List<ReservationClass>> obtenerReservas(int idUsuario) async {
     final res = await _dio.get('/clase-reservada/mis-reservas/$idUsuario');
 
     final data = res.data;
@@ -40,30 +40,30 @@ class ReservaService {
 
     return (list as List)
         .cast<Map<String, dynamic>>()
-        .map((e) => Reserva.fromJson(e))
+        .map((e) => ReservationClass.fromJson(e))
         .toList();
   }
 
-  /// Actualiza SOLO el estado de una reserva
+  /// Actualiza SOLO el estado de una ReservationClass
   /// PUT /api/clase-reservada/actualizar/{idReserva}
   /// Body: { "estado": "pendiente" | "confirmada" | "cancelada" | "completa" | "no asistio" | "expirada" }
-  Future<Reserva> actualizarEstadoReserva({
-    required Reserva reserva,
+  Future<ReservationClass> actualizarEstadoReserva({
+    required ReservationClass reservaClass,
     required String estado,
   }) async {
     final payload = {
-      "usuario": {"idUsuario": reserva.idUsuario},
-      "horario": {"idHorario": reserva.idHorario},
+      "usuario": {"idUsuario": reservaClass.idUsuario},
+      "horario": {"idHorario": reservaClass.idHorario},
       // Debe ir en yyyy-MM-dd (tu modelo ya lo tiene así)
-      "reservacion": reserva.reservacion,
+      "reservacion": reservaClass.reservacion,
       "estado": estado,
     };
 
     final res = await _dio.put(
-      '/clase-reservada/actualizar/${reserva.idReserva}',
+      '/clase-reservada/actualizar/${reservaClass.idReserva}',
       data: payload,
     );
 
-    return Reserva.fromJson(res.data as Map<String, dynamic>);
+    return ReservationClass.fromJson(res.data as Map<String, dynamic>);
   }
 }

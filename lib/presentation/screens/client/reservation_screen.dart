@@ -1,6 +1,6 @@
 // lib/presentation/screens/client/reservation_screen.dart
 import 'package:elixir_gym/core/theme/app_colors.dart';
-import 'package:elixir_gym/data/models/reservation.dart';
+import 'package:elixir_gym/data/models/reservation_class.dart';
 import 'package:elixir_gym/presentation/providers/auth/auth_provider.dart';
 import 'package:elixir_gym/presentation/providers/client/reservation_provider.dart';
 import 'package:flutter/material.dart';
@@ -88,7 +88,7 @@ class _ReservasScreenState extends State<ReservationScreen> {
                 ),
                 itemCount: vm.items.length,
                 itemBuilder: (context, i) {
-                  final Reserva r = vm.items[i];
+                  final ReservationClass r = vm.items[i];
 
                   // nombre clase / entrenador (según tu modelo)
                   final String claseNombre =
@@ -134,7 +134,7 @@ class _ReservasScreenState extends State<ReservationScreen> {
     );
   }
 
-  Future<void> _editarEstado(BuildContext context, Reserva r) async {
+  Future<void> _editarEstado(BuildContext context, ReservationClass r) async {
     const estados = <String>{
       'pendiente',
       'confirmada',
@@ -232,7 +232,7 @@ class _ReservasScreenState extends State<ReservationScreen> {
 
     if (elegido != null && elegido != r.estado) {
       final ok = await context.read<ReservationProvider>().actualizarEstado(
-        reserva: r,
+        reservationClass: r,
         estado: elegido,
       );
       if (mounted) {

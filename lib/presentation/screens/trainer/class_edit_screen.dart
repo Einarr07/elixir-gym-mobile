@@ -1,6 +1,9 @@
 import 'package:elixir_gym/core/theme/app_colors.dart';
 import 'package:elixir_gym/data/services/clase_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../providers/trainer/class_provider.dart';
 
 class ClassEditScreen extends StatefulWidget {
   final int idClase;
@@ -126,26 +129,37 @@ class _ClassEditScreenState extends State<ClassEditScreen> {
   Future<void> _eliminarClase() async {
     setState(() => _isSaving = true);
 
-    try {
-      await _service.deleteClase(widget.idClase);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Clase eliminada correctamente'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        Navigator.pop(context, true); // Volver al listado
-      }
-    } catch (e) {
+    // 1. Obtenemos la instancia del Provider
+    final provider = Provider.of<TrainerClaseProvider>(context, listen: false);
+
+    // 2. Llamamos a la función del Provider (NO al servicio directo)
+    // El provider atrapará el error 409 internamente y llenará la variable 'provider.error'
+    await provider.eliminarClase(widget.idClase);
+
+    if (!mounted) return;
+
+    setState(() => _isSaving = false);
+
+    // 3. Verificamos si el Provider reportó un error
+    if (provider.error != null) {
+      // AQUÍ mostramos el mensaje bonito que definiste en el Provider
+      // ej: "No se puede eliminar porque tiene horarios..."
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error al eliminar la clase: $e'),
-          backgroundColor: Colors.redAccent,
+          content: Text(provider.error!),
+          backgroundColor: Colors.orange[800], // Color de advertencia
+          behavior: SnackBarBehavior.floating,
         ),
       );
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
+    } else {
+      // Si error es null, significa que se borró con éxito
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Clase eliminada correctamente'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      Navigator.pop(context, true);
     }
   }
 

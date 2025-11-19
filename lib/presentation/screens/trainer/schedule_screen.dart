@@ -1,31 +1,32 @@
 import 'package:elixir_gym/core/theme/app_colors.dart';
-import 'package:elixir_gym/data/models/clase.dart';
-import 'package:elixir_gym/presentation/providers/trainer/class_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class ClassesScreen extends StatefulWidget {
-  const ClassesScreen({super.key});
+import '../../../data/models/schedule.dart';
+import '../../providers/trainer/schedule_provider.dart';
+
+class ScheduleScreen extends StatefulWidget {
+  const ScheduleScreen({super.key});
 
   @override
-  State<ClassesScreen> createState() => _ClassesScreenState();
+  State<ScheduleScreen> createState() => _ClassesScreenState();
 }
 
-class _ClassesScreenState extends State<ClassesScreen> {
+class _ClassesScreenState extends State<ScheduleScreen> {
   @override
   void initState() {
     super.initState();
     Future.microtask(
-      () => Provider.of<TrainerClaseProvider>(
+      () => Provider.of<TrainerScheduleProvider>(
         context,
         listen: false,
-      ).loadClases(),
+      ).loadHorarios(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<TrainerClaseProvider>(context);
+    final provider = Provider.of<TrainerScheduleProvider>(context);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -45,12 +46,12 @@ class _ClassesScreenState extends State<ClassesScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         onPressed: () async {
-          final creada = await Navigator.pushNamed(context, '/crear-clase');
+          final creada = await Navigator.pushNamed(context, '/crear-horario');
           if (creada == true && context.mounted) {
-            Provider.of<TrainerClaseProvider>(
+            Provider.of<TrainerScheduleProvider>(
               context,
               listen: false,
-            ).loadClases();
+            ).loadHorarios();
           }
         },
         child: const Icon(Icons.add, color: Colors.black),
@@ -58,7 +59,7 @@ class _ClassesScreenState extends State<ClassesScreen> {
     );
   }
 
-  Widget _buildBody(TrainerClaseProvider provider) {
+  Widget _buildBody(TrainerScheduleProvider provider) {
     if (provider.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -76,7 +77,10 @@ class _ClassesScreenState extends State<ClassesScreen> {
       );
     }
 
-    if (provider.clases.isEmpty) {
+    // 1. Obtenemos el MAPA AGRUPADO del provider
+    final groupedData = provider.groupedHorarios;
+
+    if (groupedData.isEmpty) {
       return const Center(
         child: Text(
           'No hay clases registradas aún.',
@@ -85,21 +89,55 @@ class _ClassesScreenState extends State<ClassesScreen> {
       );
     }
 
+    // 2. Obtenemos las "llaves" (las fechas, ej: "Domingo 20 septiembre")
+    final dateKeys = groupedData.keys.toList();
+
+    // 3. Construimos la lista de secciones
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: provider.clases.length,
+      // Padding horizontal para todas las tarjetas
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      itemCount: dateKeys.length,
       itemBuilder: (context, index) {
-        final clase = provider.clases[index];
-        return _ClaseCard(clase: clase);
+        // Obtenemos el header de la fecha y la lista de clases para esa fecha
+        final String dateHeader = dateKeys[index];
+        final List<Schedule> classesForThisDate = groupedData[dateHeader]!;
+
+        // 4. Retornamos una Columna para cada sección de fecha
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 5. El TÍTULO DE LA FECHA (Header)
+            Padding(
+              padding: EdgeInsets.only(
+                top: (index == 0) ? 16.0 : 32.0, // Espacio antes del header
+                bottom: 12.0,
+              ),
+              child: Text(
+                dateHeader,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
+            // 6. Mapeamos la lista de horarios a nuestra _ClaseCard
+            //    Usamos un Column porque ListView anidado es problemático
+            ...classesForThisDate.map((scheduleItem) {
+              return _ClaseCard(horario: scheduleItem);
+            }).toList(),
+          ],
+        );
       },
     );
   }
 }
 
 class _ClaseCard extends StatelessWidget {
-  final Clase clase;
+  final Schedule horario;
 
-  const _ClaseCard({required this.clase});
+  const _ClaseCard({super.key, required this.horario});
 
   Color _getDificultadColor(String? dificultad) {
     if (dificultad == null) return AppColors.primary;
@@ -119,6 +157,7 @@ class _ClaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final clase = horario.clase;
     final color = _getDificultadColor(clase.dificultad);
 
     return Container(
@@ -158,14 +197,14 @@ class _ClaseCard extends StatelessWidget {
         onTap: () async {
           final actualizado = await Navigator.pushNamed(
             context,
-            '/editar-clase',
-            arguments: clase.idClase,
+            '/editar-horario',
+            arguments: horario.idHorario,
           );
           if (actualizado == true && context.mounted) {
-            Provider.of<TrainerClaseProvider>(
+            Provider.of<TrainerScheduleProvider>(
               context,
               listen: false,
-            ).loadClases();
+            ).loadHorarios();
           }
         },
       ),

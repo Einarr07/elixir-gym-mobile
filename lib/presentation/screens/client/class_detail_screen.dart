@@ -10,7 +10,7 @@ import '../../../data/services/reservation_service.dart';
 import '../../providers/client/user_provider.dart';
 
 class ClassDetailScreen extends StatefulWidget {
-  final Horario horario;
+  final Schedule horario;
 
   const ClassDetailScreen({super.key, required this.horario});
 
