@@ -1,5 +1,4 @@
 import 'package:elixir_gym/core/theme/app_colors.dart';
-import 'package:elixir_gym/data/models/clase.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -47,7 +46,7 @@ class _ClassesScreenState extends State<ScheduleScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         onPressed: () async {
-          final creada = await Navigator.pushNamed(context, '/crear-clase');
+          final creada = await Navigator.pushNamed(context, '/crear-horario');
           if (creada == true && context.mounted) {
             Provider.of<TrainerScheduleProvider>(
               context,
@@ -65,11 +64,15 @@ class _ClassesScreenState extends State<ScheduleScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (provider.error != null) {
+    if (provider.error != null && provider.clases.isEmpty) {
       return Center(
-        child: Text(
-          provider.error!,
-          style: const TextStyle(color: Colors.redAccent),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Text(
+            provider.error!,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.redAccent),
+          ),
         ),
       );
     }
@@ -121,8 +124,8 @@ class _ClassesScreenState extends State<ScheduleScreen> {
 
             // 6. Mapeamos la lista de horarios a nuestra _ClaseCard
             //    Usamos un Column porque ListView anidado es problemático
-            ...classesForThisDate.map((horario) {
-              return _ClaseCard(clase: horario.clase);
+            ...classesForThisDate.map((scheduleItem) {
+              return _ClaseCard(horario: scheduleItem);
             }).toList(),
           ],
         );
@@ -132,9 +135,9 @@ class _ClassesScreenState extends State<ScheduleScreen> {
 }
 
 class _ClaseCard extends StatelessWidget {
-  final Clase clase;
+  final Schedule horario;
 
-  const _ClaseCard({required this.clase});
+  const _ClaseCard({super.key, required this.horario});
 
   Color _getDificultadColor(String? dificultad) {
     if (dificultad == null) return AppColors.primary;
@@ -154,6 +157,7 @@ class _ClaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final clase = horario.clase;
     final color = _getDificultadColor(clase.dificultad);
 
     return Container(
@@ -193,8 +197,8 @@ class _ClaseCard extends StatelessWidget {
         onTap: () async {
           final actualizado = await Navigator.pushNamed(
             context,
-            '/editar-clase',
-            arguments: clase.idClase,
+            '/editar-horario',
+            arguments: horario.idHorario,
           );
           if (actualizado == true && context.mounted) {
             Provider.of<TrainerScheduleProvider>(

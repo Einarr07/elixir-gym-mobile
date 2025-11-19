@@ -63,11 +63,15 @@ class _ClassesScreenState extends State<ClassesScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (provider.error != null) {
+    if (provider.error != null && provider.clases.isEmpty) {
       return Center(
-        child: Text(
-          provider.error!,
-          style: const TextStyle(color: Colors.redAccent),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Text(
+            provider.error!,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.redAccent),
+          ),
         ),
       );
     }

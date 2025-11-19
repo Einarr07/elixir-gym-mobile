@@ -7,6 +7,8 @@ import 'package:elixir_gym/presentation/screens/trainer/training_details_screen.
 import 'package:flutter/material.dart';
 
 import '../presentation/screens/trainer/assing_exercise_screen.dart';
+import '../presentation/screens/trainer/schedule_creation_screen.dart';
+import '../presentation/screens/trainer/schedule_edit_screen.dart';
 
 class AppRoutes {
   static Map<String, WidgetBuilder> routes = {
@@ -16,6 +18,9 @@ class AppRoutes {
       final idClase = ModalRoute.of(context)!.settings.arguments as int;
       return ClassEditScreen(idClase: idClase);
     },
+    // Horarios
+    '/crear-horario': (context) => const ScheduleCreationScreen(),
+    '/editar-horario': (context) => const ScheduleEditScreen(),
     // Entrenamiento
     '/detalle-entrenamiento': (context) {
       final entrenamiento =

@@ -15,13 +15,16 @@ class TrainerScheduleProvider extends ChangeNotifier {
   List<Schedule> _horarios = []; // Lista de horarios (con clase parcial)
   List<Clase> _clases = []; // Lista de clases (con dificultad)
 
+  // Getter público para que la UI acceda a las clases
+  List<Clase> get clases => _clases;
+
   bool isLoading = false;
   String? error;
 
   // 3. GETTER INTERNO PARA COMBINAR LAS LISTAS
   List<Schedule> get _combinedHorarios {
     // Creamos un "mapa" para buscar Clases por ID rápidamente
-    final Map<int, Clase> claseMap = {for (var c in _clases) c.idClase: c};
+    final Map<int, Clase> claseMap = {for (var c in _clases) c.idClase!: c};
 
     List<Schedule> combinedList = [];
     for (var hor in _horarios) {
@@ -121,5 +124,121 @@ class TrainerScheduleProvider extends ChangeNotifier {
     }
     isLoading = false;
     notifyListeners();
+  }
+
+  // +++ MÉTODO REQUERIDO POR ScheduleCreationScreen +++
+  // Carga solo la lista de clases para el Dropdown
+  Future<void> loadClases() async {
+    isLoading = true;
+    error = null;
+    notifyListeners();
+    try {
+      // Solo cargamos las clases
+      _clases = await _claseService.fetchAllClasses();
+    } catch (e) {
+      error = 'Error al cargar las clases: $e';
+    }
+    isLoading = false;
+    notifyListeners();
+  }
+
+  // +++ MÉTODO IMPLEMENTADO USANDO TU SERVICE +++
+  Future<void> crearHorario({
+    required int claseId,
+    required int instructorId, // La pantalla envía un int (usuario.id)
+    required DateTime fecha,
+    required DateTime horaInicio, // La pantalla envía DateTime
+    required DateTime horaFin, // La pantalla envía DateTime
+  }) async {
+    error = null;
+    // 'isLoading' se maneja en la propia pantalla (_isCreating)
+    // por lo que no lo activamos aquí para no afectar la lista de horarios.
+
+    try {
+      // Convertimos las horas de DateTime a String "HH:mm"
+      // que es lo que espera tu ScheduleService
+      final String horaInicioStr = DateFormat('HH:mm').format(horaInicio);
+      final String horaFinStr = DateFormat('HH:mm').format(horaFin);
+
+      // Llamamos al servicio con los tipos de datos correctos
+      await _horarioService.create(
+        fecha: fecha,
+        // El servicio se encarga de formatear la fecha
+        horaInicio: horaInicioStr,
+        horaFin: horaFinStr,
+        idClase: claseId,
+        idUsuarioEntrenador: instructorId,
+      );
+
+      // Opcional: Si quieres que la lista de horarios se actualice
+      // inmediatamente después de crear, descomenta la siguiente línea:
+      // await loadHorarios();
+    } catch (e) {
+      error = 'Error al crear horario: $e';
+    }
+    // Notificamos solo en caso de error, ya que la pantalla
+    // maneja el éxito (con Navigator.pop(true))
+    if (error != null) {
+      notifyListeners();
+    }
+  }
+
+  // +++ MÉTODO REQUERIDO POR ScheduleEditScreen +++
+  Future<void> actualizarHorario({
+    required int idHorario, // <-- ID del horario
+    required int claseId,
+    required int instructorId,
+    required DateTime fecha,
+    required DateTime horaInicio,
+    required DateTime horaFin,
+  }) async {
+    error = null;
+    // La UI maneja su propio estado de 'isUpdating'
+
+    try {
+      // Convertimos las horas de DateTime a String "HH:mm"
+      final String horaInicioStr = DateFormat('HH:mm').format(horaInicio);
+      final String horaFinStr = DateFormat('HH:mm').format(horaFin);
+
+      // Llamamos al servicio (que ya tienes)
+      await _horarioService.update(
+        idHorario: idHorario,
+        // <-- Pasa el ID
+        fecha: fecha,
+        horaInicio: horaInicioStr,
+        horaFin: horaFinStr,
+        idClase: claseId,
+        idUsuarioEntrenador: instructorId,
+      );
+
+      // Opcional: Si quieres que la lista de horarios se actualice
+      // inmediatamente después de crear, descomenta la siguiente línea:
+      // await loadHorarios();
+    } catch (e) {
+      error = 'Error al actualizar horario: $e';
+    }
+    // Notificamos solo en caso de error
+    if (error != null) {
+      notifyListeners();
+    }
+  }
+
+  Future<void> eliminarHorario(int idHorario) async {
+    isLoading = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      // Asumiendo que tienes un repositorio o servicio
+      await _horarioService.delete(idHorario);
+
+      // Actualizar la lista localmente para reflejar el cambio
+      _horarios.removeWhere((h) => h.idHorario == idHorario);
+    } catch (e) {
+      error = e.toString();
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 }
