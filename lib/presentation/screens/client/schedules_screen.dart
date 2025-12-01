@@ -75,6 +75,10 @@ Widget _buildBody(BuildContext context, HorariosProvider provider) {
     groupedByDate.putIfAbsent(date, () => []).add(h);
   }
 
+  // Fecha de la más nueva a la más antigua
+  final sortedEntries = groupedByDate.entries.toList()
+    ..sort((a, b) => DateTime.parse(b.key).compareTo(DateTime.parse(a.key)));
+
   return ListView(
     padding: const EdgeInsets.all(16),
     children: groupedByDate.entries.map((entry) {
@@ -102,56 +106,90 @@ Widget _buildBody(BuildContext context, HorariosProvider provider) {
   );
 }
 
+// Estilo
+Color _getDificultadColor(String? dificultad) {
+  if (dificultad == null) return AppColors.primary;
+
+  switch (dificultad.toUpperCase()) {
+    case 'PRINCIPIANTE':
+    case 'BÁSICO':
+      return Colors.green;
+    case 'INTERMEDIO':
+      return Colors.orange;
+    case 'AVANZADO':
+      return Colors.redAccent;
+    default:
+      return AppColors.primary;
+  }
+}
+
 Widget _HorarioCard(BuildContext context, Schedule schedule) {
   final inicio = _formatearHora(schedule.horaInicio);
   final fin = _formatearHora(schedule.horaFin);
+  final clase = schedule.clase;
+  final color = _getDificultadColor(clase.dificultad);
 
-  return GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => ClassDetailScreen(horario: schedule)),
-      );
-    },
-    child: Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF292716),
-        borderRadius: BorderRadius.circular(16),
+  return Container(
+    margin: const EdgeInsets.only(bottom: 16),
+    decoration: BoxDecoration(
+      color: AppColors.card,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: color.withOpacity(0.4), width: 1.5),
+      boxShadow: [
+        BoxShadow(
+          color: color.withOpacity(0.15),
+          blurRadius: 6,
+          offset: const Offset(0, 3),
+        ),
+      ],
+    ),
+    child: ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      leading: CircleAvatar(
+        backgroundColor: color.withOpacity(0.9),
+        radius: 22,
+        child: const Icon(Icons.fitness_center, color: Colors.black),
       ),
-      child: Row(
+      title: Text(
+        '${clase.nombre} '
+        'con ${schedule.entrenador.nombre} ${schedule.entrenador.apellido}',
+        style: TextStyle(color: color, fontWeight: FontWeight.bold),
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${schedule.clase.nombre} con ${schedule.entrenador.nombre} ${schedule.entrenador.apellido}',
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '$inicio - $fin',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
+          const SizedBox(height: 2),
+          Text(
+            '$inicio - $fin',
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
             ),
           ),
-          const Icon(
-            Icons.arrow_forward_ios,
-            color: AppColors.primary,
-            size: 18,
+          const SizedBox(height: 2),
+          Text(
+            'Duración: ${clase.duracion} min'
+            '${clase.dificultad != null ? ' • ${clase.dificultad}' : ''}',
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+            ),
           ),
         ],
       ),
+      trailing: const Icon(
+        Icons.arrow_forward_ios,
+        color: AppColors.textSecondary,
+        size: 18,
+      ),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ClassDetailScreen(horario: schedule),
+          ),
+        );
+      },
     ),
   );
 }

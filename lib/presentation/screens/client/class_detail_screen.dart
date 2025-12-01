@@ -2,12 +2,12 @@ import 'package:elixir_gym/core/theme/app_colors.dart';
 import 'package:elixir_gym/data/models/clase.dart';
 import 'package:elixir_gym/data/models/schedule.dart';
 import 'package:elixir_gym/data/services/clase_service.dart';
+import 'package:elixir_gym/data/services/reservation_service.dart';
 import 'package:elixir_gym/presentation/providers/client/class_provider.dart';
+import 'package:elixir_gym/presentation/providers/client/reservation_provider.dart';
+import 'package:elixir_gym/presentation/providers/client/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import '../../../data/services/reservation_service.dart';
-import '../../providers/client/user_provider.dart';
 
 class ClassDetailScreen extends StatefulWidget {
   final Schedule horario;
@@ -20,8 +20,11 @@ class ClassDetailScreen extends StatefulWidget {
 
 class _ClassDetailScreenState extends State<ClassDetailScreen> {
   final _claseService = ClaseService();
+  final _reservaService = ReservaService();
+
   Clase? _claseFull;
   bool _loadingClase = false;
+  bool _booking = false; // <- estado del botón
 
   @override
   void initState() {
@@ -39,9 +42,55 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
       );
       if (mounted) setState(() => _claseFull = c);
     } catch (_) {
-      // puedes mostrar un SnackBar si lo prefieres
+      // podrías mostrar un SnackBar si quieres
     } finally {
       if (mounted) setState(() => _loadingClase = false);
+    }
+  }
+
+  Future<void> _onReservarCupo() async {
+    final user = context.read<UserProvider>().usuario;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Inicia sesión para reservar')),
+      );
+      return;
+    }
+
+    setState(() => _booking = true);
+    try {
+      // 1. Crear la reserva para este usuario y este horario
+      await _reservaService.crearReserva(
+        idUsuario: user.idUsuario,
+        horario: widget.horario,
+      );
+
+      // 2. Refrescar "Mis Reservas" para que se vea automáticamente
+      if (mounted) {
+        await context.read<ReservationProvider>().load(user.idUsuario);
+      }
+
+      // 3. Feedback al usuario
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.green,
+          content: Text('¡Reserva creada con éxito!'),
+        ),
+      );
+
+      // 4. (Opcional) volver a la lista de clases
+      // Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text('No se pudo reservar: $e'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _booking = false);
     }
   }
 
@@ -52,9 +101,6 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
 
     final dificultad = clase.dificultad ?? 'No especificada';
     final capacidad = clase.capacidadMax?.toString() ?? 'N/A';
-
-    bool _booking = false;
-    final _reservaService = ReservaService();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -108,44 +154,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _booking
-                    ? null
-                    : () async {
-                        final user = context.read<UserProvider>().usuario;
-                        if (user == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Inicia sesión para reservar'),
-                            ),
-                          );
-                          return;
-                        }
-
-                        setState(() => _booking = true);
-                        try {
-                          final reserva = await _reservaService.crearReserva(
-                            idUsuario: user.idUsuario,
-                            horario: widget.horario,
-                          );
-
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('¡Reserva creada con éxito!'),
-                            ),
-                          );
-
-                          // opcional: navega a pantalla de "Mis Reservas" o vuelve atrás
-                          // Navigator.pop(context, reserva);
-                        } catch (e) {
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('No se pudo reservar: $e')),
-                          );
-                        } finally {
-                          if (mounted) setState(() => _booking = false);
-                        }
-                      },
+                onPressed: _booking ? null : _onReservarCupo,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(

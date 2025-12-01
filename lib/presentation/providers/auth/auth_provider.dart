@@ -1,4 +1,3 @@
-// lib/presentation/providers/auth/auth_provider.dart
 import 'package:elixir_gym/data/models/user_model.dart';
 import 'package:elixir_gym/data/services/auth_service.dart';
 import 'package:elixir_gym/utils/role_utils.dart';

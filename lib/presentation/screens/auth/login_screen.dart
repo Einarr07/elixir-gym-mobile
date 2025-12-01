@@ -36,12 +36,20 @@ class _LoginScreenState extends State<LoginScreen> {
     final userProv = context.read<UserProvider>();
 
     try {
+      // 1. Login con AuthProvider (esto ya setea auth.usuario y auth.role)
       await auth.login(email: _email.text.trim(), password: _password.text);
 
       if (!mounted) return;
 
-      // ✅ En lugar de forzar HomeScreen (cliente),
-      // manda al "router" neutral que decide por rol.
+      // 2. Obtener el usuario logueado desde AuthProvider
+      final usuarioLogueado = auth.usuario;
+
+      // 3. Guardarlo en UserProvider para que pantallas de cliente lo lean
+      if (usuarioLogueado != null) {
+        userProv.setUsuario(usuarioLogueado);
+      }
+
+      // 4. Navegar al shell que decide por rol (admin/entrenador/cliente)
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const RoleBasedHome()),
         (_) => false,
